@@ -1,0 +1,18 @@
+[package]
+name = "scrape"
+version = "0.1.0"
+authors = ["Yuya Minami <yuya373@me.com>"]
+edition = "2018"
+
+[dependencies]
+reqwest = "0.9.5"
+scraper = "0.9"
+zip = "0.5"
+regex = "1"
+toml = "0.4"
+num_cpus = "1.9"
+threadpool = "1.7"
+
+serde = "*"
+serde_derive = "*"
+
