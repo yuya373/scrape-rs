@@ -9,15 +9,9 @@ pub struct Entry {
     pub url: String,
     pub title_selector: String,
     pub image_selector: String,
-    #[serde(default = "Entry::default_pages")]
-    pub pages: Vec<String>,
 }
 
 impl Entry {
-    pub fn default_pages() -> Vec<String> {
-        vec![]
-    }
-
     pub fn get_page(&self) -> std::io::Result<Box<Scrapable + Send + Sync>> {
         let stdin = std::io::stdin();
         let mut stdout = std::io::stdout();
