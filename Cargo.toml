@@ -11,6 +11,8 @@ zip = "0.5"
 regex = "1"
 toml = "0.4"
 rayon = "1"
+log = "0.4.0"
+env_logger = "0.6.0"
 
 serde = "*"
 serde_derive = "*"

@@ -1,3 +1,4 @@
+extern crate log;
 extern crate rayon;
 extern crate reqwest;
 extern crate zip;
@@ -17,6 +18,7 @@ pub fn fetch(url: &str) -> Result<String> {
 }
 
 fn write_zip(title: &str, images: Vec<Image>) -> zip::result::ZipResult<()> {
+    debug!("[zip][start] {}", title);
     let current_dir = std::env::current_dir()?;
     let dir = current_dir.join("downloads");
     std::fs::create_dir_all(&dir)?;
@@ -36,6 +38,7 @@ fn write_zip(title: &str, images: Vec<Image>) -> zip::result::ZipResult<()> {
     }
 
     zip.finish()?;
+    debug!("[zip][finish] {}", title);
     Ok(())
 }
 
@@ -43,10 +46,12 @@ pub fn save(title: String, srcs: Vec<String>) {
     let images: Vec<Image> = srcs
         .into_par_iter()
         .map(|src| {
+            debug!("[image][start] {}", src);
             let mut buf: Vec<u8> = vec![];
             let mut resp = get(&src).expect(&format!("failed to get image: {:?}", src));
             resp.copy_to(&mut buf)
                 .expect(&format!("failedo download image: {:?}", src));
+            debug!("[image][finish] {}", src);
 
             let path = std::path::Path::new(&src);
             let name = path.file_name().unwrap();
