@@ -3,8 +3,6 @@ extern crate reqwest;
 extern crate scraper;
 #[macro_use]
 extern crate serde_derive;
-extern crate num_cpus;
-extern crate threadpool;
 extern crate toml;
 extern crate zip;
 
@@ -14,7 +12,6 @@ mod entry;
 use reqwest::{get, Result};
 use scraper::Html;
 use std::io::prelude::*;
-use threadpool::ThreadPool;
 use zip::write::FileOptions;
 
 use self::entry::{Entry, Image};
@@ -47,8 +44,6 @@ fn write_zip(title: &str, images: Vec<Image>) -> zip::result::ZipResult<()> {
 }
 
 fn main() {
-    let n_cpus = num_cpus::get();
-    let pool = ThreadPool::new(n_cpus);
     let config = config::get_config().expect("failed to load config.toml");
 
     for entry in config.entries {
@@ -75,27 +70,17 @@ fn main() {
                         break;
                     }
 
-                    pool.execute(move || {
-                        let content = fetch(&page.url)
-                            .expect(&format!("failed to get content from: {:?}", page.url));
-                        let document = Html::parse_document(&content);
-                        let title = page.title(&document);
+                    let content = fetch(&page.url)
+                        .expect(&format!("failed to get content from: {:?}", page.url));
+                    let document = Html::parse_document(&content);
+                    let title = page.title(&document);
 
-                        match page.images(&document) {
-                            Ok(images) => write_zip(&title, images).unwrap(),
-                            Err(e) => panic!(e),
-                        }
-                    });
+                    match page.images(&document) {
+                        Ok(images) => write_zip(&title, images).unwrap(),
+                        Err(e) => panic!(e),
+                    }
                 }
             }
         }
     }
-
-    pool.join();
-    println!(
-        "Queued: {}, Max Concurrency: {}, Panic: {},",
-        pool.queued_count(),
-        pool.max_count(),
-        pool.panic_count(),
-    )
 }
