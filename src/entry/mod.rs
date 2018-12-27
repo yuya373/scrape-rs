@@ -1,52 +1,49 @@
 extern crate regex;
-extern crate reqwest;
 extern crate scraper;
-extern crate serde_derive;
 
-pub struct Image {
-    pub name: String,
-    pub buf: Vec<u8>,
-}
+use regex::Regex;
+use scraper::Selector;
 
-pub mod page;
+mod entry;
+mod page;
 
-use self::page::Page;
-use std::io::Write;
+pub use self::entry::*;
+pub use self::page::*;
 
-#[derive(Deserialize)]
-pub struct Entry {
-    pub url: String,
-    pub title_selector: String,
-    pub image_selector: String,
-    #[serde(default = "Entry::default_pages")]
-    pub pages: Vec<String>,
-}
+pub trait Scrapable {
+    fn url(&self) -> &str;
+    fn title_selector(&self) -> &str;
+    fn image_selector(&self) -> &str;
 
-impl Entry {
-    pub fn default_pages() -> Vec<String> {
-        vec![]
+    fn title(&self, document: &scraper::Html) -> String {
+        let selector = Selector::parse(self.title_selector()).expect(&format!(
+            "failed to parse selector: {:?}",
+            self.title_selector()
+        ));
+        let title = document
+            .select(&selector)
+            .next()
+            .expect(&format!(
+                "failed to get title with selector: {:?}",
+                selector
+            ))
+            .inner_html();
+        let title_normalize_re = Regex::new(r"\r|\s|/").unwrap();
+        title_normalize_re.replace_all(&title, "_").to_string()
     }
 
-    pub fn get_page(&self) -> std::io::Result<Page> {
-        let stdin = std::io::stdin();
-        let mut stdout = std::io::stdout();
-
-        stdout.write(b"URL: ").unwrap();
-        stdout.flush().unwrap();
-
-        let mut buf = String::new();
-        match stdin.read_line(&mut buf) {
-            Ok(_) => {
-                let url = buf.trim();
-
-                println!("→ {:?}", url);
-                Ok(Page::new(
-                    url.to_string(),
-                    self.title_selector.clone(),
-                    self.image_selector.clone(),
-                ))
+    fn image_srcs(&self, document: &scraper::Html) -> Vec<String> {
+        let selector = Selector::parse(self.image_selector()).expect(&format!(
+            "failed to parse selector: {:?}",
+            self.image_selector()
+        ));
+        let mut image_srcs = vec![];
+        for img in document.select(&selector) {
+            match img.value().attr("src") {
+                Some(src) => image_srcs.push(src.to_string()),
+                None => {}
             }
-            Err(e) => Err(e),
         }
+        image_srcs
     }
 }

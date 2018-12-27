@@ -1,7 +1,7 @@
 extern crate serde_derive;
 extern crate toml;
 
-use super::Entry;
+use super::entry::Entry;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
