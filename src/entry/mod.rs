@@ -8,7 +8,7 @@ pub struct Image {
     pub buf: Vec<u8>,
 }
 
-mod page;
+pub mod page;
 
 use self::page::Page;
 use std::io::Write;

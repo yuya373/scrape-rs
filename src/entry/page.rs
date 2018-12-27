@@ -43,7 +43,7 @@ impl Page {
         self.fetch_images(image_srcs)
     }
 
-    fn image_srcs(&self, document: &scraper::Html) -> Vec<String> {
+    pub fn image_srcs(&self, document: &scraper::Html) -> Vec<String> {
         let selector = Selector::parse(&self.image_selector).expect(&format!(
             "failed to parse selector: {:?}",
             self.image_selector
